@@ -103,6 +103,67 @@ for i in top_docs_relevance:
     print(i[0].page_content)
 
 
+########################################################################################################################
+# 06 - SET UP THE LLM ASSISTANT
+########################################################################################################################
+
+from langchain_openai import ChatOpenAI
+abc_assistant_llm = ChatOpenAI(model="gpt-5",
+                               temperature=0,
+                               max_tokens=None,
+                               timeout=None,
+                               max_retries=1)
+
+
+########################################################################################################################
+# 07 - SET UP THE PROMPT TEMPLATE
+########################################################################################################################
+
+from langchain_core.prompts import ChatPromptTemplate
+
+prompt_template = ChatPromptTemplate.from_template(
+"""
+System Instructions: You are a helpful assistant for ABC Grocery - your job is to find the best solutions & answers for the customer's query.
+Answer ONLY using the provided context. If the answer is not in the context, say that you don't have this information and encourage the customer to email human@abc-grocery.com
+
+Context: {context}
+
+Question: {input}
+
+Answer:
+"""
+)
+    
+
+########################################################################################################################
+# 08 - SET UP THE RETRIEVER
+########################################################################################################################
+
+# document retriever
+retriever = vectorstore.as_retriever(search_type="similarity_score_threshold", 
+                                     search_kwargs={"k": 6,  "score_threshold": 0.25})
+
+
+########################################################################################################################
+# 09 - SET UP THE RETRIEVAL CHAIN
+########################################################################################################################
+
+from langchain_core.runnables import RunnableLambda
+from operator import itemgetter
+
+def format_docs(docs):
+    return "\n\n".join(d.page_content for d in docs)
+
+# RAG answer chain: {input} -> retrieve -> format -> prompt -> model -> string
+rag_answer_chain = (
+    {
+        "context": itemgetter("input") | retriever | RunnableLambda(format_docs),
+        "input": itemgetter("input"),
+    }
+    | prompt_template
+    | abc_assistant_llm
+)
+
 
 
 
