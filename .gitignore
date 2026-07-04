@@ -1,0 +1,5 @@
+.env
+.env.save
+__pycache__/
+.spyproject/
+.DS_Store
