@@ -108,7 +108,7 @@ for i in top_docs_relevance:
 ########################################################################################################################
 
 from langchain_openai import ChatOpenAI
-abc_assistant_llm = ChatOpenAI(model="gpt-5",
+abc_assistant_llm = ChatOpenAI(model="gpt-4",
                                temperature=0,
                                max_tokens=None,
                                timeout=None,
@@ -165,7 +165,36 @@ rag_answer_chain = (
 )
 
 
+########################################################################################################################
+# 10 - QUERY THE ASSISTANT
+########################################################################################################################
 
+user_prompt = ("What time can I come into the store today?")
+user_prompt = ("What products do you sell?")
+user_prompt = ("The shoes I bought are damaged.  What should I do?")
+user_prompt = ("What is a baby dolphin called?")
+
+# invoke the retrieval chain and get response
+response = rag_answer_chain.invoke({"input": user_prompt})
+print(response.content)
+
+
+########################################################################################################################
+# 11 - CHECK THE CONTEXT USED
+########################################################################################################################
+
+from langchain_core.runnables import RunnableParallel
+
+# to also bring through context and user query for analysis
+rag_with_context = RunnableParallel(answer=rag_answer_chain,
+                                    context=itemgetter("input") | retriever,
+                                    input=itemgetter("input"))
+
+user_prompt = ("What time can I come into the store today?")
+
+# invoke
+response = rag_with_context.invoke({"input": user_prompt})
+print(response["answer"].content)
 
 
 
